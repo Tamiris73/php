@@ -1,0 +1,66 @@
+version: "3"
+services:
+  #PHP App
+  app:
+    image: lazarodu/php-image:latest
+    container_name: app
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /var/www/html
+    volumes:
+      - /home/tamiris/php/www:/var/www/html
+      - /home/tamiris/php/config/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini
+    networks:
+      - cefetnet
+
+  #Nginx Service
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "80:80"
+    volumes:
+      - /home/tamiris/php/www:/var/www/html
+      - /home/tamiris/php/config/conf.d:/etc/nginx/conf.d
+    networks:
+      - cefetnet
+
+  mariadb:
+    image: mariadb:10
+    container_name: "mariadb"
+    restart: "unless-stopped"
+    networks:
+      - cefetnet
+    ports:
+      - "3306:3306"
+    volumes:
+      - /home/tamiris/php/data:/var/lib/mysql
+    environment:
+      MARIADB_ROOT_PASSWORD: mariadb
+      MARIADB_DATABASE: cefet
+      MARIADB_USER: cefet
+      MARIADB_PASSWORD: cefetmg
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: "phpmyadmin"
+    restart: unless-stopped
+    networks:
+      - cefetnet
+    environment:
+      PMA_ARBITRARY: 1
+      MAX_EXECUTION_TIME: 90000
+      MEMORY_LIMIT: 2G
+      UPLOAD_LIMIT: 5G
+    ports:
+      - 8080:80
+
+#Docker Networks
+networks:
+  cefetnet:
+    driver: bridge
